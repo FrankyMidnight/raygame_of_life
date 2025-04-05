@@ -3,6 +3,7 @@
 #include <time.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include <raylib.h>
 
@@ -11,10 +12,10 @@ void game_setup();
 void game_update();
 void game_draw();
 void game_close();
-
+void apply_rule();
 const char *title = "Conway's Game of Life";
 #define WIN_WIDTH   1200
-#define WIN_HEIGHT  800
+#define WIN_HEIGHT  900
 int FPS_TARGET  =   60;
 
 #define CELL_SIZE   10
@@ -54,9 +55,9 @@ int main(void)
 
 void game_init()
 {
-    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+    // SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
     InitWindow(WIN_WIDTH, WIN_HEIGHT, title);
-    // SetTargetFPS(FPS_TARGET);
+    SetTargetFPS(FPS_TARGET);
 }
 void game_close()
 {
@@ -65,19 +66,21 @@ void game_close()
 
 void game_setup()
 {
+    puts("GAME SETUP");
     srand((uint32_t)time(NULL));
     // Generate same random cells on all two boards
-    int cell_count = 200;
+    // int cell_count = 200;
     for (int i = 0; i < BOARD_COLS * BOARD_ROWS; i++) 
     {
-        cell_count--;
+        // cell_count--;
         board_old[i] = (bool)(rand() % 2) ? true : false;
         board_new[i] = board_old[i];
-        if(cell_count <= 0) break;
+        // if(cell_count <= 0) break;
     }
 }
 void game_update()
 {
+    // READ INPUT
     if(IsKeyPressed(KEY_R))
     {
         game_setup();
@@ -90,10 +93,8 @@ void game_update()
     else if (IsKeyPressed(KEY_SPACE))
     {
         // toggle the pause of the game
-        // is_running = !is_running;
-        if(is_running == true) is_running = false;
-        else if(is_running == false) is_running = true;
-        if(!is_running) printf("%s\n", (is_running) ? "PAUSE TRUE" : "PAUSE FALSE");
+        is_running = !is_running;
+        printf("%s\n", (is_running) ? "PAUSE TRUE" : "PAUSE FALSE");
     }  
     else if (IsKeyPressed(KEY_UP))
     {
@@ -104,7 +105,7 @@ void game_update()
             SetTargetFPS(FPS_TARGET);
         }
     }  
-    else if (IsKeyPressed(KEY_DOWN))
+    else if (IsKeyDown(KEY_DOWN))
     {
         // decrease speed
         if(FPS_TARGET > 10)
@@ -114,47 +115,21 @@ void game_update()
         }
     }  
     // update board with rules of the game
-    else if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
-        // printf("X : %i\tY : %i\n", GetMouseX(), GetMouseY());
+        printf("X : %i\tY : %i\n", GetMouseX(), GetMouseY());
         // Divide mouse position by cell size to get the index
         int col = GetMouseX() / CELL_SIZE;
         int row = GetMouseY() / CELL_SIZE;
         // translate x y coordinate into monodimensional array
-        board_new[BOARD_COLS * row + col] = !board_new[BOARD_COLS * row + col];
+        board_old[BOARD_COLS * row + col] = !board_old[BOARD_COLS * row + col];
     } 
-    // Apply rule of the game
-    // rule 1   if the cell is alive and has  < 2 || > 3 nearby alive cells , cell dies
-    // rule 2   if the cell is  dead and has    == 3     nearby alive cells , cell rebirth   
-    // PROVARE A CICLARE PARTENDO DA ROW 1 e COL 1 FINO A ROWS -2 e COLS -2 praticamente 
-    // per ignorare la cintura esterna 
-    for (int row = 1; row < BOARD_ROWS - 2 ; row++) 
+    if(is_running)
     {
-        for (int col = 1; col < BOARD_COLS - 2; col++) 
-        {
-            // calculate index for monodimensional array
-            int index = BOARD_COLS * row + col;
-            // CALCULATE NEARBY ALIVE CELLS of board_old
-            int nearby_alive_cells = calculate_nearby_alive_cells(row, col);
-            // if current cell is alive and has < 2 or > 3 alive cells it dies
-            if(board_old[index])
-            {
-                if(nearby_alive_cells < 2 || nearby_alive_cells > 3)
-                {
-                    board_old[index] = false;
-                }
-            }
-            else if(!board_old[index] && nearby_alive_cells == 3)
-            {
-                board_old[index] = true;
-            }
-        }
+        apply_rule();
     }
-    // copy board_old in board_new
-    for (int i = 0; i < BOARD_COLS * BOARD_ROWS; i++) 
-    {
-        board_new[i] = board_old[i];
-    }
+
+    
 }
 void game_draw()
 {
@@ -184,26 +159,64 @@ void game_draw()
 
 int calculate_nearby_alive_cells(int row, int col)
 {
-    int alive_cells = 0;
+    int nearby_alive_cells = 0;
     // left
-    if(board_old[BOARD_COLS *  row + col - 1]) alive_cells++;
+    if(board_old[BOARD_COLS *  row + col - 1]) nearby_alive_cells++;
     // right
-    if(board_old[BOARD_COLS *  row + col + 1]) alive_cells++;
+    if(board_old[BOARD_COLS *  row + col + 1]) nearby_alive_cells++;
 
     // top left
-    if(board_old[BOARD_COLS * (row - 1 ) + col - 1]) alive_cells++;
-    // top 
-    if(board_old[BOARD_COLS * (row - 1 ) + col   ]) alive_cells++;
+    if(board_old[BOARD_COLS * (row - 1 ) + col - 1]) nearby_alive_cells++;
+    // top center
+    if(board_old[BOARD_COLS * (row - 1 ) + col   ]) nearby_alive_cells++;
     // top right
-    if(board_old[BOARD_COLS * (row - 1 ) + col + 1]) alive_cells++;
+    if(board_old[BOARD_COLS * (row - 1 ) + col + 1]) nearby_alive_cells++;
 
     // bottom left
-    if(board_old[BOARD_COLS * (row + 1 ) + col - 1]) alive_cells++;
-    // top 
-    if(board_old[BOARD_COLS * (row + 1 ) + col   ]) alive_cells++;
-    // top right
-    if(board_old[BOARD_COLS * (row + 1 ) + col + 1]) alive_cells++;
+    if(board_old[BOARD_COLS * (row + 1 ) + col - 1]) nearby_alive_cells++;
+    // bottom center
+    if(board_old[BOARD_COLS * (row + 1 ) + col   ]) nearby_alive_cells++;
+    // bottom right
+    if(board_old[BOARD_COLS * (row + 1 ) + col + 1]) nearby_alive_cells++;
 
 
-    return alive_cells;
+    return nearby_alive_cells;
+}
+
+void apply_rule()
+{
+    // Apply rule of the game
+    // rule 1   if the cell is alive and has  < 2 || > 3 nearby alive cells , cell dies
+    // rule 2   if the cell is  dead and has    == 3     nearby alive cells , cell rebirth   
+    // PROVARE A CICLARE PARTENDO DA ROW 1 e COL 1 FINO A ROWS -2 e COLS -2 praticamente 
+    // per ignorare la cintura esterna 
+    for (int row = 1; row < BOARD_ROWS - 1 ; row++) 
+    {
+        for (int col = 1; col < BOARD_COLS - 1; col++) 
+        {
+            // calculate index for monodimensional array
+            int index = BOARD_COLS * row + col;
+            board_new[index] = board_old[index];
+            // CALCULATE NEARBY ALIVE CELLS of board_old
+            int nearby_alive_cells = calculate_nearby_alive_cells(row, col);
+            // if current cell is alive and has < 2 or > 3 alive cells it dies
+            if(board_old[index] && (nearby_alive_cells == 2))
+            {
+                board_new[index] = true;
+            }
+            else if(!board_old[index] && (nearby_alive_cells == 3))
+            {
+                board_new[index] = true;
+            }
+            else
+            {
+                board_new[index] = false;
+            }
+        }
+    }
+    // copy  board_new in board_old
+    for (int i = 0; i < BOARD_COLS * BOARD_ROWS; i++) 
+    {
+        board_old[i] = board_new[i];
+    }
 }
