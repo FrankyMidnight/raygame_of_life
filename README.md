@@ -1,6 +1,12 @@
 # raygame_of_life
 Raylib implementation of the Conway' game of life
 
+Compile with :  
+
+chmod +x build.sh
+./build.sh raygame_of_life.c release
+
+
 HOTKEYS
 
 F               Shows FPS (game speed)
