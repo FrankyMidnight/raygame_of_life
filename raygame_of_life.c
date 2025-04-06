@@ -17,6 +17,10 @@ const char *title = "Conway's Game of Life";
 
 int WIN_WIDTH = 1400;
 int WIN_HEIGHT = 700;
+int DEFAULT_WIN_WIDTH = 1400;
+int DEFAULT_WIN_HEIGHT = 700;
+int FULLSCREEN_WIDTH = 1920;
+int FULLSCREEN_HEIGHT = 1080;
 
 int FPS_TARGET = 60;
 double wait_time = 0.2;
@@ -34,6 +38,7 @@ Color CELL_COLOR = {.r = 65, .g = 65, .b = 65, .a = 255};
 
 bool is_running = true;
 bool is_fps_visible = false;
+bool is_fullscreen;
 
 int calculate_nearby_alive_cells(int row, int col);
 
@@ -48,9 +53,9 @@ int main(void)
         {
             game_update();
         }
-            BeginDrawing();
-            game_draw();
-            EndDrawing();
+        BeginDrawing();
+        game_draw();
+        EndDrawing();
     }
     game_close();
     return 0;
@@ -58,12 +63,13 @@ int main(void)
 
 void game_init()
 {
-    
+
     // Init window with flags set
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
     InitWindow(WIN_WIDTH, WIN_HEIGHT, title);
     // set target fps
     SetTargetFPS(FPS_TARGET);
+    
 }
 void game_close()
 {
@@ -76,20 +82,25 @@ void game_setup()
 {
     free(board_new);
     free(board_old);
+
     // calculate columns and rows by window size
     BOARD_COLS = WIN_WIDTH / CELL_SIZE;
     BOARD_ROWS = WIN_HEIGHT / CELL_SIZE;
+
     // allocate 2 boards for doublebuffering
     board_old = calloc((size_t)(BOARD_COLS * BOARD_ROWS), sizeof(bool));
     board_new = calloc((size_t)(BOARD_COLS * BOARD_ROWS), sizeof(bool));
+
     // check exit on failure
-    if(!board_new || !board_old)
+    if (!board_new || !board_old)
     {
         TraceLog(LOG_INFO, "Error allocating memory for the boards");
         exit(EXIT_FAILURE);
     }
+
     // Seed random generator with time
     srand((uint32_t)time(NULL));
+
     // Generate same random cells on all two boards
     // int cell_count = 200;
     for (int i = 0; i < BOARD_COLS * BOARD_ROWS; i++)
@@ -123,9 +134,9 @@ void read_input()
         // Increase speed
         wait_time -= 0.05;
         TraceLog(LOG_INFO, "Wait time : %.2f", wait_time);
-        if(FPS_TARGET < 80)
+        if (FPS_TARGET < 142)
         {
-            FPS_TARGET += 5;
+            FPS_TARGET += 2;
             SetTargetFPS(FPS_TARGET);
         }
     }
@@ -134,20 +145,29 @@ void read_input()
         // decrease speed
         wait_time += 0.05;
         TraceLog(LOG_INFO, "Wait time : %.2f", wait_time);
-        if(FPS_TARGET > 0)
+        if (FPS_TARGET > 3)
         {
-            FPS_TARGET -= 5;
+            FPS_TARGET -= 2;
             SetTargetFPS(FPS_TARGET);
         }
     }
-    if(IsKeyPressed(KEY_F11))
+    if (IsKeyPressed(KEY_F11))
     {
         ToggleFullscreen();
-        WIN_HEIGHT = GetRenderHeight();
-        WIN_WIDTH = GetRenderWidth();
+        is_fullscreen = !is_fullscreen;
+        // if  in fullscreen switch to fullscreen resolution
+        if (IsWindowFullscreen())
+        {
+            WIN_WIDTH = FULLSCREEN_WIDTH;
+            WIN_HEIGHT = FULLSCREEN_HEIGHT;
+        }
+        // else switch to default resolution
+        else
+        {
+            WIN_WIDTH = DEFAULT_WIN_WIDTH;
+            WIN_HEIGHT = DEFAULT_WIN_HEIGHT;
+        }
         SetWindowSize(WIN_WIDTH, WIN_HEIGHT);
-        TraceLog(LOG_INFO, "NEW WIDTH : %i\tNEW HEIGHT %i", WIN_WIDTH, WIN_HEIGHT);
-        TraceLog(LOG_INFO, "RENDER WIDTH : %i\tRENDER HEIGHT %i", GetRenderWidth(), GetRenderHeight());
         game_setup();
     }
     // update board with rules of the game
@@ -158,7 +178,7 @@ void read_input()
         int col = GetMouseX() / CELL_SIZE;
         int row = GetMouseY() / CELL_SIZE;
         // translate x y coordinate into monodimensional array
-        // change cell in both boards and draw 
+        // change cell in both boards and draw
         board_new[BOARD_COLS * row + col] = !board_new[BOARD_COLS * row + col];
         board_old[BOARD_COLS * row + col] = board_new[BOARD_COLS * row + col];
         game_draw();
@@ -184,7 +204,7 @@ void game_draw()
     // Print FPS
     if (is_fps_visible)
     {
-        DrawFPS(WIN_WIDTH -20, 20);
+        DrawFPS(WIN_WIDTH * 0.9f, WIN_HEIGHT * 0.1f);
     }
 }
 
