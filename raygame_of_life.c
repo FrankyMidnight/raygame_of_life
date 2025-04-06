@@ -115,7 +115,7 @@ void game_setup()
     }
 
     // Seed random generator with time
-    srand((uint32_t)time(NULL));
+    // srand((uint32_t)time(NULL));
 
     // Generate same random cells on all two boards
     // int cell_count = 200;
