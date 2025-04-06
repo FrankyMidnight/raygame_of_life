@@ -22,6 +22,9 @@ int DEFAULT_WIN_HEIGHT = 700;
 int FULLSCREEN_WIDTH = 1920;
 int FULLSCREEN_HEIGHT = 1080;
 
+Image icon ;
+const char *icon_path = "images/icon.png"; 
+
 int FPS_TARGET = 60;
 double wait_time = 0.2;
 
@@ -69,12 +72,25 @@ void game_init()
     InitWindow(WIN_WIDTH, WIN_HEIGHT, title);
     // set target fps
     SetTargetFPS(FPS_TARGET);
-    
+    // setup window icon
+    Image icon = LoadImage(icon_path);
+    if(IsImageValid(icon))
+    {
+        SetWindowIcon(icon);
+    }
+    else  
+    {
+        TraceLog(LOG_ERROR, "Error in loading %s", icon_path);
+    }
 }
 void game_close()
 {
+    // Free image
+    UnloadImage(icon);
+    // free boards
     free(board_new);
     free(board_old);
+    // free window
     CloseWindow();
 }
 
