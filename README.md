@@ -1,23 +1,27 @@
-# raygame_of_life
+# Raygame_of_life             
+
 
 A Raylib implementation of the Conway' game of life
+---
+Building :  
+`chmod +x build.sh`
 
-Compile with :  
+`./build.sh raygame_of_life.c release`
 
-chmod +x build.sh
-./build.sh raygame_of_life.c release
-
+or compile with :  
+`gcc raygame_of_life.c -lraylib -o raygame_of_life`
 
 HOTKEYS
+```
 
-F               Shows FPS (game speed)
-ARROW UP/DOWN   Increase/Decrease speed
-R               Restart game
-SPACE           Pause game
-F11             Fullscreen
-ESC             Quit and Close the window
-
-Editing the cells
+F                               Shows FPS (game speed)
+ARROW UP/DOWN                   Increase/Decrease speed
+R                               Restart game
+SPACE                           Pause game
+F11                             Fullscreen
+ESC                             Quit and Close the window
+```
+## Editing the cells
 
 When the game is paused it is possible to edit the cells ,
 just click on a cell to delete it or click on empty space 
