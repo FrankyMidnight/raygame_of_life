@@ -14,9 +14,10 @@ void game_draw();
 void game_close();
 void game_update();
 const char *title = "Conway's Game of Life";
-#define WIN_WIDTH 900
-#define WIN_HEIGHT 900
-int FPS_TARGET = 144;
+// int WIN_WIDTH = 1600;
+#define WIN_WIDTH 1400
+#define WIN_HEIGHT 700
+int FPS_TARGET = 60;
 double wait_time = 0.2;
 
 #define CELL_SIZE 10
@@ -50,7 +51,7 @@ int main(void)
             BeginDrawing();
             game_draw();
             EndDrawing();
-            WaitTime(wait_time);
+            // WaitTime(wait_time);
     }
     game_close();
     return 0;
@@ -104,12 +105,26 @@ void read_input()
         // Increase speed
         wait_time -= 0.05;
         TraceLog(LOG_INFO, "Wait time : %.2f", wait_time);
+        if(FPS_TARGET < 80)
+        {
+            FPS_TARGET += 5;
+            SetTargetFPS(FPS_TARGET);
+        }
     }
     if (IsKeyPressed(KEY_DOWN))
     {
         // decrease speed
         wait_time += 0.05;
         TraceLog(LOG_INFO, "Wait time : %.2f", wait_time);
+        if(FPS_TARGET > 0)
+        {
+            FPS_TARGET -= 5;
+            SetTargetFPS(FPS_TARGET);
+        }
+    }
+    if(IsKeyPressed(KEY_F11))
+    {
+        ToggleFullscreen();
     }
     // update board with rules of the game
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -119,7 +134,10 @@ void read_input()
         int col = GetMouseX() / CELL_SIZE;
         int row = GetMouseY() / CELL_SIZE;
         // translate x y coordinate into monodimensional array
-        board_old[BOARD_COLS * row + col] = !board_old[BOARD_COLS * row + col];
+        // change cell in both boards and draw 
+        board_new[BOARD_COLS * row + col] = !board_new[BOARD_COLS * row + col];
+        board_old[BOARD_COLS * row + col] = board_new[BOARD_COLS * row + col];
+        game_draw();
     }
 }
 void game_draw()
